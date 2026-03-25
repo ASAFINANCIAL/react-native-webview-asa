@@ -112,6 +112,12 @@ public class RNCWebViewClient extends WebViewClient {
                         if (SystemClock.elapsedRealtime() - startTime > SHOULD_OVERRIDE_URL_LOADING_TIMEOUT) {
                             FLog.w(TAG, "Did not receive response to shouldOverrideUrlLoading in time, defaulting to allow loading.");
                             RNCWebViewModuleImpl.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
+                            // On timeout, check if URL uses the app package name as scheme.
+                            // Block it to prevent ERR_UNKNOWN_URL_SCHEME.
+                            String appScheme = view.getContext().getPackageName() + "://";
+                            if (url != null && url.startsWith(appScheme)) {
+                                return true;
+                            }
                             return false;
                         }
                         lockObject.wait(SHOULD_OVERRIDE_URL_LOADING_TIMEOUT);
